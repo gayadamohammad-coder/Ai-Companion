@@ -14,24 +14,20 @@ api_key=os.getenv("GEMINI_API_KEY")
 #Create Gemini client
 client = genai.Client(api_key=api_key)
 
-#Send a message
-response = client.models.generate_content(
-    model="gemini-2.5-flash",
-    contents = "Say hello to Mohammed and tell him you are his AI Companion"
-)
 
-
-print(response.text)
-
+conversation = []
 
 while True:
     user_input=input("You: ")
+    conversation.append(f"User:{user_input}")
     if user_input=="quit":
         break
     response = client.models.generate_content(
         model="gemini-2.5-flash",
-        contents = user_input
+        contents="\n".join(conversation)
     )
+
+    conversation.append(f"AI:{response.text}")
 
     print("AI:",response.text)
     
