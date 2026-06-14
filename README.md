@@ -2,7 +2,7 @@
 
 ## Vision
 
-Build a personal AI companion that acts as:
+Building a personal AI companion that acts as:
 
 * Friend
 * Diary
