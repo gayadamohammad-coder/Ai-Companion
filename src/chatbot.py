@@ -29,7 +29,13 @@ Be friendly and concise.
 """
 
 def start_chat():
-    conversation = []
+    
+    if os.path.exists("data/conversation.txt"):
+        with open("data/conversation.txt","r",encoding="utf-8") as files:
+            conversation = files.read().splitlines()
+
+    else:
+        conversation=[]
 
     while True:
         user_input = input("You: ")
@@ -47,3 +53,7 @@ def start_chat():
         conversation.append(f"AI: {response.text}")
 
         print("AI:", response.text)
+
+
+    with open("data/conversation.txt", "w", encoding="utf-8") as file:
+        file.write("\n".join(conversation))

@@ -1,0 +1,9 @@
+User: Hello
+AI: Hello Mohammed! How can I help you today?
+User: quit
+User: My favorite language is Python
+AI: Fantastic, Mohammed! Python is an excellent language for AI engineering and coding. How can I assist you with it today?
+User: quit
+User: what is my favorite language?
+AI: Your favorite language is Python, Mohammed!
+User: quit
