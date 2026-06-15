@@ -97,3 +97,33 @@ def get_goals():
     goals = cursor.fetchall()
     conn.close()
     return goals
+
+
+def create_profile_table():
+    conn=sqlite3.connect("data/companion.db")
+    
+    cursor=conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS profile(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        field_name TEXT NOT NULL,
+        field_value TEXT NOT NULL
+        )
+        """)
+    conn.commit()
+    conn.close()
+
+
+def save_profile(field_name, field_value):
+    conn = sqlite3.connect("data/companion.db")
+
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO profile (field_name, field_value) VALUES (?, ?)",
+        (field_name, field_value)
+    )
+
+    conn.commit()
+    conn.close()
