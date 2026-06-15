@@ -7,3 +7,5 @@ User: quit
 User: what is my favorite language?
 AI: Your favorite language is Python, Mohammed!
 User: quit
+User: quit
+User: quit

@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os
 from google import genai
-
+from src.memory import save_memory,get_memories
 # Load .env file
 load_dotenv()
 
@@ -41,6 +41,27 @@ def start_chat():
         user_input = input("You: ")
 
         conversation.append(f"User: {user_input}")
+
+        if user_input.startswith("remember "):
+
+            memory_text = user_input[9:]
+
+            save_memory(memory_text)
+
+            print("AI: I'll remember that.")
+
+            continue
+
+        if user_input == "show memories":
+
+            memories = get_memories()
+
+            print("AI Memory:")
+
+            for memory in memories:
+                print("-", memory[0])
+
+            continue
 
         if user_input == "quit":
             break
