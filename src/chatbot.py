@@ -1,7 +1,17 @@
 from dotenv import load_dotenv
 import os
 from google import genai
-from src.memory import save_memory,get_memories
+from src.memory import(
+ create_database, 
+    save_memory,
+    get_memories,
+    delete_memory,
+    save_goal,
+    get_goals,
+    create_database,
+    create_goals_table
+    
+    ) 
 # Load .env file
 load_dotenv()
 
@@ -42,6 +52,23 @@ def start_chat():
 
         conversation.append(f"User: {user_input}")
 
+        if user_input.startswith("set goal "):
+            goal_text = user_input[9:]
+
+            save_goal(goal_text)
+
+            print("AI: Goal saved.")
+
+            continue
+
+        if user_input == "show goals":
+            goals = get_goals()
+
+            print("AI goals:")
+            for goal in goals:
+                print("-",goal[0])
+            continue
+
         if user_input.startswith("remember "):
 
             memory_text = user_input[9:]
@@ -60,6 +87,16 @@ def start_chat():
 
             for memory in memories:
                 print("-", memory[0])
+
+            continue
+
+        if user_input.startswith("forget "):
+
+            memory_text = user_input[7:]
+
+            delete_memory(memory_text)
+
+            print("AI: Memory deleted.")
 
             continue
 
