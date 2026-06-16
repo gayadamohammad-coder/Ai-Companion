@@ -127,3 +127,17 @@ def save_profile(field_name, field_value):
 
     conn.commit()
     conn.close()
+
+def get_profile():
+    conn= sqlite3.connect("data/companion.db")
+    
+    cursor=conn.cursor()
+    cursor.execute("""
+                   SELECT field_name , field_value FROM profile
+    """)
+
+    profile = cursor.fetchall()
+
+    conn.close()
+
+    return profile
