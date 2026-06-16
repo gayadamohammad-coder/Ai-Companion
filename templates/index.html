@@ -2,36 +2,60 @@
 <html>
 <head>
     <title>AI Companion</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
 
-    <div class="container">
+<div class="container">
 
-        <h1>AI Companion</h1>
+    <div class="sidebar">
+        <h2 id="logo">AI Companion</h2>
 
-        <div class="card">
-            <h2>Profile</h2>
-            <p>Name: Mohammed</p>
-            <p>Goal: Become AI Engineer</p>
-        </div>
+        <p class="menu-item">Dashboard</p>
+        <p class="menu-item">Profile</p>
+        <p class="menu-item">Goals</p>
+        <p class="menu-item">Learning</p>
+    </div>
 
-        <div class="card">
-            <h2>Goals</h2>
-            <ul>
-                <li>Become AI Engineer</li>
-            </ul>
-        </div>
+    <div class="main">
+        <h1>Welcome Mohammed</h1>
 
-        <div class="card">
-            <h2>Memories</h2>
-            <ul>
-                <li>Favorite language: Python</li>
-            </ul>
-        </div>
+        <div class="cards">
+
+    <div class="card">
+        <h2>Current Goal</h2>
+        <p>Become AI Engineer</p>
+    </div>
+
+    <div class="card">
+        <h2>Learning Progress</h2>
+        <p>Python - 70%</p>
+        <p>SQL - 40%</p>
+        <p>HTML - 20%</p>
+    </div>
+
+<div class="card">
+    <h2>Profile</h2>
+
+    <p>Age: 21</p>
+    <p>Height: 183 cm</p>
+    <p>Weight: 74 kg</p>
+</div>
+
+<div class="card">
+    <h2>Roadmap</h2>
+
+    <p>✓ Website</p>
+    <p>→ Ollama Integration</p>
+    <p>→ Code Teacher</p>
+</div>
 
     </div>
+
+</div>
 
 </body>
 </html>
