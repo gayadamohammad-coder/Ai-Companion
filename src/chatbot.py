@@ -1,6 +1,5 @@
-from dotenv import load_dotenv
+import ollama
 import os
-from google import genai
 from src.memory import(
  create_database, 
     save_memory,
@@ -12,14 +11,8 @@ from src.memory import(
     create_goals_table
     
     ) 
-# Load .env file
-load_dotenv()
 
-# Read API key
-api_key = os.getenv("GEMINI_API_KEY")
 
-# Create Gemini client
-client = genai.Client(api_key=api_key)
 
 # AI personality
 system_prompt = """
@@ -27,15 +20,21 @@ You are AI Companion.
 
 You are Mohammed's personal AI companion.
 
-You help with:
+Always answer in English.
+
+Never reveal your chain of thought.
+
+Be concise.
+
+Help with:
 - AI Engineering
 - Coding
-- Productivity
-- Mindfulness
-- Fitness
+- HTML
+- CSS
+- Python
+- SQL
 - Learning
-
-Be friendly and concise.
+- Career growth
 """
 
 def start_chat():
@@ -103,14 +102,25 @@ def start_chat():
         if user_input == "quit":
             break
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=system_prompt + "\n" + "\n".join(conversation)
-        )
+        response = ollama.chat(
+            model="qwen3:4b",
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+                {
+                    "role": "user",
+                    "content": "\n".join(conversation)
+                }
+            ]
+        )   
 
-        conversation.append(f"AI: {response.text}")
+        ai_text = response["message"]["content"]
 
-        print("AI:", response.text)
+        conversation.append(f"AI: {ai_text}")
+
+        print("AI:", ai_text)
 
 
     with open("data/conversation.txt", "w", encoding="utf-8") as file:
