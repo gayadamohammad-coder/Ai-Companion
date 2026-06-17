@@ -72,7 +72,7 @@ def start_chat():
 
         try:
             response = ollama.chat(
-                model="qwen3:4b",
+                model="qwen2.5:1.5b",
                 messages=[{"role": "system", "content": system_prompt}] + conversation
             )
             ai_text = response["message"]["content"]

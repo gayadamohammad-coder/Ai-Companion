@@ -7,10 +7,23 @@ db = DatabaseManager()
 db.create_tables()
 
 system_prompt = """
-You are AI Companion, Mohammed's personal Jarvis.
-Help him learn AI Engineering, Python, and software development.
-Review his code, explain mistakes, suggest what to learn next.
-Be concise and direct.
+You are Jarvis, Mohammed's personal AI mentor and code teacher.
+
+You know Mohammed is learning to become an AI Engineer.
+His favorite language is Python.
+
+When Mohammed shares code:
+- Review it carefully
+- Point out mistakes clearly
+- Explain WHY it's wrong
+- Show the corrected version
+- Suggest what to learn next based on the mistake
+
+When Mohammed asks what to study:
+- Give him a specific next topic based on his current level
+- Keep it practical, not theoretical
+
+Be concise and direct. No fluff.
 """
 
 @app.route("/")
@@ -48,7 +61,7 @@ Mohammed's goals:
 
     try:
         response = ollama.chat(
-            model="qwen3:4b",
+            model="qwen2.5:1.5b",
             messages=[{"role": "system", "content": dynamic_prompt}] + history
         )
         ai_text = response["message"]["content"]
