@@ -68,3 +68,33 @@ class DatabaseManager:
         goals = cursor.fetchall()
         conn.close()
         return goals
+    
+
+    def create_chat_history_table(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            timestamp TEXT NOT NULL
+        )
+             """)
+        conn.commit()
+        conn.close()
+
+    
+
+    def save_message(self, role, content):
+        from datetime import datetime
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO chat_history (role, content, timestamp) VALUES (?, ?, ?)",
+            (role, content, datetime.now().isoformat())
+        )
+        conn.commit()
+        conn.close()
+    
+    
