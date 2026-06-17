@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Companion - Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="sidebar">
+        <h2 id="logo">AI Companion</h2>
+        <p class="menu-item"><a href="/">Dashboard</a></p>
+        <p class="menu-item"><a href="/chat">Chat</a></p>
+    </div>
+
+    <div class="main">
+        <div class="chat-container">
+            <div class="chat-box" id="chatBox"></div>
+
+            <div class="chat-input-area">
+                <input type="text" id="userInput" placeholder="Talk to Jarvis..." />
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let history = [];
+
+    async function sendMessage() {
+        const input = document.getElementById("userInput");
+        const message = input.value.trim();
+        if (!message) return;
+
+        appendMessage("You", message);
+        input.value = "";
+
+        const thinking = appendMessage("Jarvis", "Thinking...");
+
+        const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: message, history: history })
+        });
+
+        const data = await response.json();
+        history = data.history;
+        thinking.innerHTML = `<strong>Jarvis:</strong> ${data.reply}`;
+    }
+
+    function appendMessage(sender, text) {
+        const box = document.getElementById("chatBox");
+        const div = document.createElement("div");
+        div.classList.add("message", sender === "You" ? "user-message" : "ai-message");
+        div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+        return div;
+    }
+
+    document.getElementById("userInput").addEventListener("keypress", function(e) {
+        if (e.key === "Enter") sendMessage();
+    });
+</script>
+
+</body>
+</html>

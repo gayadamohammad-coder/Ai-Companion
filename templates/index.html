@@ -26,16 +26,13 @@
         <div class="cards">
 
     <div class="card">
-        <h2>Current Goal</h2>
-        <p>Become AI Engineer</p>
-    </div>
-
-    <div class="card">
-        <h2>Learning Progress</h2>
-        <p>Python - 70%</p>
-        <p>SQL - 40%</p>
-        <p>HTML - 20%</p>
-    </div>
+    <h2>Goals</h2>
+    {% for goal in goals %}
+        <p>→ {{ goal[0] }}</p>
+    {% else %}
+        <p>No goals yet.</p>
+    {% endfor %}
+</div>
 
 <div class="card">
     <h2>Profile</h2>
