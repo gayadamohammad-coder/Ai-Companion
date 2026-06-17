@@ -45,6 +45,8 @@
     <button id="codeModeBtn" onclick="toggleCodeMode()">&lt;/&gt;</button>
     <button onclick="sendMessage()">Send</button>
     <button id="stopBtn" onclick="stopJarvis()" style="display:none;">Stop</button>
+    <input type="file" id="fileInput" accept=".py,.html,.css,.js" style="display:none;" onchange="handleFileUpload(event)">
+<button onclick="document.getElementById('fileInput').click()">📁</button>
 </div>
         </div>
     </div>
@@ -165,7 +167,31 @@ function hideStopButton() {
 
     document.getElementById("userInput").addEventListener("keypress", function(e) {
         if (e.key === "Enter") sendMessage();
+
+
     });
+
+
+    async function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const text = await file.text();
+    const message = `Here is my file "${file.name}":\n\n${text}\n\nPlease explain this code to me.`;
+
+    appendMessage("You", `Uploaded ${file.name}`);
+    const thinking = appendMessage("Jarvis", "Thinking...");
+
+    const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: message, history: history })
+    });
+
+    const data = await response.json();
+    history = data.history;
+    thinking.innerHTML = `<strong>Jarvis:</strong> ${data.reply}`;
+}
 </script>
 
 </body>

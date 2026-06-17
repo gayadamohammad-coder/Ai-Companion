@@ -108,4 +108,18 @@ class DatabaseManager:
         conn.close()
         return chat_history
     
+
+    def create_learning_table(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS learning_topics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            topic TEXT NOT NULL,
+            status TEXT NOT NULL,
+            date_added TEXT NOT NULL
+             )
+        """)
+        conn.commit()
+        conn.close()
     
