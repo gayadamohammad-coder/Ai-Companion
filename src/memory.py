@@ -96,5 +96,16 @@ class DatabaseManager:
         )
         conn.commit()
         conn.close()
+
+    def get_chat_history(self):
+        conn=sqlite3.connect(self.db_path)
+        cursor=conn.cursor()
+        cursor.execute("""
+                    SELECT role,content FROM chat_history
+                    ORDER BY id ASC
+                       """)
+        chat_history = cursor.fetchall()
+        conn.close()
+        return chat_history
     
     

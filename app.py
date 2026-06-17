@@ -5,6 +5,7 @@ import ollama
 app = Flask(__name__)
 db = DatabaseManager()
 db.create_tables()
+db.create_chat_history_table()
 
 system_prompt = """
 You are Jarvis, Mohammed's personal AI mentor and code teacher.
@@ -34,7 +35,8 @@ def home():
 
 @app.route("/chat")
 def chat_page():
-    return render_template("chat.html")
+    history = db.get_chat_history()
+    return render_template("chat.html", history=history)
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
@@ -58,6 +60,7 @@ Mohammed's goals:
 """
 
     history.append({"role": "user", "content": user_message})
+    db.save_message("user", user_message)
 
     try:
         response = ollama.chat(
@@ -66,6 +69,7 @@ Mohammed's goals:
         )
         ai_text = response["message"]["content"]
         history.append({"role": "assistant", "content": ai_text})
+        db.save_message("assistant", ai_text)
         return jsonify({"reply": ai_text, "history": history})
 
     except Exception as e:
