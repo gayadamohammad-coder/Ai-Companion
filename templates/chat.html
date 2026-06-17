@@ -3,6 +3,9 @@
 <head>
     <title>AI Companion - Chat</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
 </head>
 <body>
 
@@ -26,6 +29,18 @@
 
            <div class="chat-input-area">
     <textarea id="userInput" placeholder="Talk to Jarvis or paste code..." rows="3"></textarea>
+    <div id="codeModalOverlay" class="code-modal-overlay" style="display:none;">
+    <div class="code-modal">
+        <div class="code-modal-header">
+            <span>Code editor</span>
+            <button onclick="closeCodeModal()">✕</button>
+        </div>
+        <div id="editorContainer"></div>
+        <div class="code-modal-footer">
+            <button onclick="sendCode()">Send to Jarvis</button>
+        </div>
+    </div>
+</div>
     <button id="codeModeBtn" onclick="toggleCodeMode()">&lt;/&gt;</button>
     <button onclick="sendMessage()">Send</button>
 </div>
@@ -40,40 +55,65 @@
 
     let codeMode = false;
 
-function toggleCodeMode() {
-    codeMode = !codeMode;
-    const input = document.getElementById("userInput");
-    const btn = document.getElementById("codeModeBtn");
+let editor = null;
 
-    if (codeMode) {
-        input.placeholder = "Paste your code here...";
-        btn.classList.add("active");
-    } else {
-        input.placeholder = "Talk to Jarvis...";
-        btn.classList.remove("active");
+function toggleCodeMode() {
+    const overlay = document.getElementById("codeModalOverlay");
+    overlay.style.display = "flex";
+
+    if (!editor) {
+        editor = CodeMirror(document.getElementById("editorContainer"), {
+            mode: "python",
+            theme: "default",
+            lineNumbers: true,
+            indentUnit: 4,
+            value: ""
+        });
     }
+    setTimeout(() => editor.refresh(), 10);
+    editor.focus();
 }
 
-document.getElementById("userInput").addEventListener("keydown", function(e) {
-    if (e.key === "Tab") {
-        e.preventDefault();
-        const start = this.selectionStart;
-        const end = this.selectionEnd;
-        this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
-        this.selectionStart = this.selectionEnd = start + 4;
-    }
-});
+function closeCodeModal() {
+    document.getElementById("codeModalOverlay").style.display = "none";
+}
+
+async function sendCode() {
+    const code = editor.getValue().trim();
+    if (!code) return;
+
+    const finalMessage = `Please review this code:\n\n${code}`;
+    appendMessage("You", code);
+    editor.setValue("");
+    closeCodeModal();
+
+    const thinking = appendMessage("Jarvis", "Thinking...");
+
+    const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: finalMessage, history: history })
+    });
+
+    const data = await response.json();
+    history = data.history;
+    thinking.innerHTML = `<strong>Jarvis:</strong> ${data.reply}`;
+}
 
     async function sendMessage() {
         const input = document.getElementById("userInput");
-        const message = input.value.trim();
+        const message = codeMode ? editor.getValue().trim() : input.value.trim();
         const finalMessage = codeMode 
         ? `Please review this code:\n\n${message}` 
         : message;
         if (!message) return;
 
         appendMessage("You", message);
-        input.value = "";
+        if (codeMode) {
+             editor.setValue("");
+        } else {
+            input.value = "";
+        }
 
         const thinking = appendMessage("Jarvis", "Thinking...");
 
