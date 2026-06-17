@@ -6,6 +6,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 </head>
 <body>
 
@@ -64,7 +65,7 @@ function toggleCodeMode() {
     if (!editor) {
         editor = CodeMirror(document.getElementById("editorContainer"), {
             mode: "python",
-            theme: "default",
+            theme: "dracula",
             lineNumbers: true,
             indentUnit: 4,
             value: ""
