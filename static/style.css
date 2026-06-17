@@ -268,3 +268,18 @@ body {
 .code-modal-footer button:hover {
     background: #6babff;
 }
+
+#stopBtn {
+    padding: 14px 20px;
+    background: #d33;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#stopBtn:hover {
+    background: #f44;
+}

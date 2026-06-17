@@ -44,6 +44,7 @@
 </div>
     <button id="codeModeBtn" onclick="toggleCodeMode()">&lt;/&gt;</button>
     <button onclick="sendMessage()">Send</button>
+    <button id="stopBtn" onclick="stopJarvis()" style="display:none;">Stop</button>
 </div>
         </div>
     </div>
@@ -101,33 +102,56 @@ async function sendCode() {
     thinking.innerHTML = `<strong>Jarvis:</strong> ${data.reply}`;
 }
 
-    async function sendMessage() {
-        const input = document.getElementById("userInput");
-        const message = codeMode ? editor.getValue().trim() : input.value.trim();
-        const finalMessage = codeMode 
-        ? `Please review this code:\n\n${message}` 
-        : message;
-        if (!message) return;
+    let currentController = null;
 
-        appendMessage("You", message);
-        if (codeMode) {
-             editor.setValue("");
-        } else {
-            input.value = "";
-        }
+async function sendMessage() {
+    const input = document.getElementById("userInput");
+    const message = input.value.trim();
+    if (!message) return;
 
-        const thinking = appendMessage("Jarvis", "Thinking...");
+    appendMessage("You", message);
+    input.value = "";
 
+    const thinking = appendMessage("Jarvis", "Thinking...");
+    showStopButton();
+
+    currentController = new AbortController();
+
+    try {
         const response = await fetch("/api/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: finalMessage, history: history })
+            body: JSON.stringify({ message: message, history: history }),
+            signal: currentController.signal
         });
 
         const data = await response.json();
         history = data.history;
         thinking.innerHTML = `<strong>Jarvis:</strong> ${data.reply}`;
+    } catch (err) {
+        if (err.name === "AbortError") {
+            thinking.innerHTML = `<strong>Jarvis:</strong> (cancelled)`;
+        } else {
+            thinking.innerHTML = `<strong>Jarvis:</strong> Error occurred.`;
+        }
     }
+
+    hideStopButton();
+}
+
+function stopJarvis() {
+    if (currentController) {
+        currentController.abort();
+    }
+}
+
+function showStopButton() {
+    document.getElementById("stopBtn").style.display = "inline-block";
+}
+
+function hideStopButton() {
+    document.getElementById("stopBtn").style.display = "none";
+}
 
     function appendMessage(sender, text) {
         const box = document.getElementById("chatBox");
