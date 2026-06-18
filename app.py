@@ -27,6 +27,10 @@ When Mohammed asks what to study:
 Be concise and direct. No fluff.
 """
 
+@app.route("/study")
+def study_page():
+    return render_template("study.html")
+
 @app.route("/")
 def home():
     goals = db.get_goals()
@@ -74,6 +78,36 @@ Mohammed's goals:
 
     except Exception as e:
         return jsonify({"reply": f"Error: {e}"}), 500
+    
+
+    @app.route("/api/study", methods=["POST"])
+    def study():
+        data = request.get_json()
+        user_message = data.get("message", "")
+        topic = data.get("topic", "")
+        history = data.get("history", [])
+
+        study_prompt = f"""You are Jarvis, a strict but encouraging coding teacher.
+
+You are teaching Mohammed {topic} from scratch.
+
+Your teaching style:
+- Explain ONE concept at a time, simply and clearly
+- Always give a real example from Mohammed's actual project (Flask app, SQLite database, chat UI)
+- After explaining, ask ONE quiz question to check understanding
+- If Mohammed answers correctly, say "Correct!" and move to the next concept
+- If Mohammed answers wrong, explain why and ask again — do NOT move on
+- Never explain more than one concept before getting a correct answer
+- Keep responses short and focused
+
+Mohammed's project context:
+- Flask web app called Jarvis/AI Companion
+- SQLite database with memories, goals, chat_history tables
+- chat.html with JavaScript fetch calls to /api/chat
+- Dark terminal-style UI
+
+Start by introducing the first concept for {topic}. Do not ask what they want to learn — just start teaching.
+"""
 
 if __name__ == "__main__":
     app.run(debug=True)

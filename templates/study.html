@@ -1,0 +1,37 @@
+<div class="container">
+    <div class="sidebar">
+        <h2 id="logo">Jarvis</h2>
+        <p class="menu-item"><a href="/">Dashboard</a></p>
+        <p class="menu-item"><a href="/chat">Chat</a></p>
+        <p class="menu-item"><a href="/study">Study</a></p>
+    </div>
+
+    <div class="main">
+        <div id="topic-select">
+            <h1>What do you want to study today?</h1>
+            <div class="topic-buttons">
+                <button onclick="startSession('JavaScript')">JavaScript</button>
+                <button onclick="startSession('Flask')">Flask</button>
+                <button onclick="startSession('HTML & CSS')">HTML & CSS</button>
+                <button onclick="startSession('Python')">Python</button>
+            </div>
+        </div>
+
+        <div id="study-chat" style="display:none;">
+            <h2 id="session-title"></h2>
+            <div class="chat-box" id="studyBox"></div>
+            <div class="chat-input-area">
+                <textarea id="studyInput" placeholder="Type your answer..."></textarea>
+                <button onclick="sendAnswer()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function startSession(topic) {
+        document.getElementById("topic-select").style.display = "none";
+        document.getElementById("study-chat").style.display = "flex";
+        document.getElementById("session-title").textContent = "Studying: " + topic;
+    }
+</script>
