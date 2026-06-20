@@ -80,14 +80,14 @@ Mohammed's goals:
         return jsonify({"reply": f"Error: {e}"}), 500
     
 
-    @app.route("/api/study", methods=["POST"])
-    def study():
-        data = request.get_json()
-        user_message = data.get("message", "")
-        topic = data.get("topic", "")
-        history = data.get("history", [])
+@app.route("/api/study", methods=["POST"])
+def study():
+    data = request.get_json()
+    user_message = data.get("message", "")
+    topic = data.get("topic", "")
+    history = data.get("history", [])
 
-        study_prompt = f"""You are Jarvis, a strict but encouraging coding teacher.
+    study_prompt = f"""You are Jarvis, a strict but encouraging coding teacher.
 
 You are teaching Mohammed {topic} from scratch.
 
@@ -108,6 +108,19 @@ Mohammed's project context:
 
 Start by introducing the first concept for {topic}. Do not ask what they want to learn — just start teaching.
 """
+
+    history.append({"role": "user", "content": user_message})
+
+    try:
+        response = ollama.chat(
+            model="qwen2.5:1.5b",
+            messages=[{"role": "system", "content": study_prompt}] + history
+        )
+        ai_text = response["message"]["content"]
+        history.append({"role": "assistant", "content": ai_text})
+        return jsonify({"reply": ai_text, "history": history})
+    except Exception as e:
+        return jsonify({"reply": f"Error: {e}"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
