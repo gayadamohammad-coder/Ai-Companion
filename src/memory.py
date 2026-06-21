@@ -1,7 +1,10 @@
 import sqlite3
 from config import DB_PATH
+from sentence_transformers import SentenceTransformer
+import json
 
 class DatabaseManager:
+    embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
     def __init__(self, db_path=DB_PATH):
         self.db_path = db_path
 
@@ -11,7 +14,8 @@ class DatabaseManager:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS memories (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                memory_text TEXT NOT NULL
+                memory_text TEXT NOT NULL,
+                embedding TEXT NOT NULL
             )
         """)
         cursor.execute("""
@@ -26,9 +30,11 @@ class DatabaseManager:
     def save_memory(self, memory_text):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
+        embedding=self.embedding_model.encode(memory_text)
+        embedding_json=json.dumps(embedding.tolist())
         cursor.execute(
-            "INSERT INTO memories (memory_text) VALUES (?)",
-            (memory_text,)
+            "INSERT INTO memories (memory_text,embedding) VALUES (?,?)",
+            (memory_text,embedding_json,)
         )
         conn.commit()
         conn.close()
