@@ -62,6 +62,8 @@ Mohammed's saved memories:
 Mohammed's goals:
 {goals_text}
 """
+    memories=db.search_memories(user_message)
+    memory_text = "\n".join([f"-{m[0]}"for m in memories])
 
     history.append({"role": "user", "content": user_message})
     db.save_message("user", user_message)
@@ -87,6 +89,9 @@ def study():
     topic = data.get("topic", "")
     history = data.get("history", [])
 
+    memories = db.search_memories(user_message)
+    memory_text = "\n".join([f"- {m[0]}" for m in memories])
+
     study_prompt = f"""You are Jarvis, a strict but encouraging coding teacher.
 
 You are teaching Mohammed {topic} from scratch.
@@ -107,6 +112,9 @@ Mohammed's project context:
 - Dark terminal-style UI
 
 Start by introducing the first concept for {topic}. Do not ask what they want to learn — just start teaching.
+
+Mohammed's relevant memories:
+{memory_text}
 """
 
     history.append({"role": "user", "content": user_message})
