@@ -3,6 +3,7 @@
 <head>
     <title>Jarvis — Study Mode</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.0/marked.min.js"></script>
 </head>
 <body>
 
@@ -37,23 +38,40 @@
 </div>
 
 <script>
-    function startSession(topic) {
-        document.getElementById("topic-select").style.display = "none";
-        document.getElementById("study-chat").style.display = "flex";
-        document.getElementById("session-title").textContent = "Studying: " + topic;
-    }
-
-    let studyHistory = [];
+let studyHistory = [];
 let currentTopic = "";
 
 function appendStudyMessage(sender, text) {
     const box = document.getElementById("studyBox");
     const div = document.createElement("div");
     div.classList.add("message", sender === "You" ? "user-message" : "ai-message");
-    div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    const formattedText = sender === "Jarvis" ? marked.parse(text) : text;
+    div.innerHTML = `<strong>${sender}:</strong> ${formattedText}`;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
     return div;
+}
+
+async function startSession(topic) {
+    currentTopic = topic;
+    studyHistory = [];
+
+    document.getElementById("topic-select").style.display = "none";
+    document.getElementById("study-chat").style.display = "flex";
+    document.getElementById("session-title").textContent = "Studying: " + topic;
+    document.getElementById("studyBox").innerHTML = "";
+
+    const thinking = appendStudyMessage("Jarvis", "Thinking...");
+
+    const response = await fetch("/api/study", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "Start teaching me " + topic, topic: topic, history: studyHistory })
+    });
+
+    const data = await response.json();
+    studyHistory = data.history;
+    thinking.innerHTML = `<strong>Jarvis:</strong> ${marked.parse(data.reply)}`;
 }
 
 async function sendAnswer() {
@@ -74,9 +92,8 @@ async function sendAnswer() {
 
     const data = await response.json();
     studyHistory = data.history;
-    thinking.innerHTML = `<strong>Jarvis:</strong> ${data.reply}`;
+    thinking.innerHTML = `<strong>Jarvis:</strong> ${marked.parse(data.reply)}`;
 }
 </script>
-
 </body>
 </html>
