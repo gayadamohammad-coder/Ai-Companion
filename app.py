@@ -48,7 +48,7 @@ def chat():
     user_message = data.get("message", "")
     history = data.get("history", [])
 
-    memories = db.get_memories()
+    memories = db.search_memories(user_message)
     goals = db.get_goals()
 
     memory_text = "\n".join([f"- {m[0]}" for m in memories])

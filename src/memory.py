@@ -1,6 +1,7 @@
 import sqlite3
 from config import DB_PATH
 from sentence_transformers import SentenceTransformer
+from sentence_transformers.util import cos_sim
 import json
 
 class DatabaseManager:
@@ -26,6 +27,18 @@ class DatabaseManager:
         """)
         conn.commit()
         conn.close()
+    
+    def search_memories(self,query,top_n=3):
+        memories = self.get_memories()
+        query_embedding=self.embedding_model.encode(query)
+
+        results = []
+        for memory_text, embedding_json in memories:
+            stored_embedding = json.loads(embedding_json)
+            similarity = cos_sim(query_embedding,stored_embedding)
+            results.append((memory_text,similarity))
+        results.sort(key=lambda x: x[1],reverse=True)
+        return results[:top_n]
 
     def save_memory(self, memory_text):
         conn = sqlite3.connect(self.db_path)
@@ -42,7 +55,7 @@ class DatabaseManager:
     def get_memories(self):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT memory_text FROM memories")
+        cursor.execute("SELECT memory_text,embedding FROM memories")
         memories = cursor.fetchall()
         conn.close()
         return memories
