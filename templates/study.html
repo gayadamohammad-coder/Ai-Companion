@@ -29,83 +29,90 @@
         <div id="study-chat" style="display:none;">
             <h2 id="session-title"></h2>
             <div class="chat-box" id="studyBox"></div>
-           <div class="chat-input-area">
-    <textarea id="studyInput" placeholder="Type your answer..."></textarea>
-    <button onclick="sendAnswer()">Send</button>
-</div>
+            <div class="chat-input-area">
+                <textarea id="studyInput" placeholder="Type your answer..."></textarea>
+                <button onclick="sendAnswer()">Send</button>
+            </div>
 
-<div class="status-bar">
-    <span><span class="hint">enter</span> send · <span class="hint">shift+enter</span> new line</span>
-    <span>qwen2.5:1.5b</span>
-</div>
+            <div class="status-bar">
+                <span><span class="hint">enter</span> send · <span class="hint">shift+enter</span> new line</span>
+                <span>qwen2.5:1.5b</span>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-let studyHistory = [];
-let currentTopic = "";
+    const JARVIS_KEY = "{{ api_key }}";
+    let studyHistory = [];
+    let currentTopic = "";
 
-function appendStudyMessage(sender, text) {
-    const box = document.getElementById("studyBox");
-    const div = document.createElement("div");
-    div.classList.add("message", sender === "You" ? "user-message" : "ai-message");
-    const formattedText = sender === "Jarvis" ? marked.parse(text) : text;
-    div.innerHTML = `<strong>${sender}:</strong> ${formattedText}`;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-    return div;
-}
-
-async function startSession(topic) {
-    currentTopic = topic;
-    studyHistory = [];
-
-    document.getElementById("topic-select").style.display = "none";
-    document.getElementById("study-chat").style.display = "flex";
-    document.getElementById("session-title").textContent = "Studying: " + topic;
-    document.getElementById("studyBox").innerHTML = "";
-
-    const thinking = appendStudyMessage("Jarvis", "Thinking...");
-
-    const response = await fetch("/api/study", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: "Start teaching me " + topic, topic: topic, history: studyHistory })
-    });
-
-    const data = await response.json();
-    studyHistory = data.history;
-    thinking.innerHTML = `<strong>Jarvis:</strong> ${marked.parse(data.reply)}`;
-}
-
-async function sendAnswer() {
-    const input = document.getElementById("studyInput");
-    const message = input.value.trim();
-    if (!message) return;
-
-    appendStudyMessage("You", message);
-    input.value = "";
-
-    const thinking = appendStudyMessage("Jarvis", "Thinking...");
-
-    const response = await fetch("/api/study", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: message, topic: currentTopic, history: studyHistory })
-    });
-
-    const data = await response.json();
-    studyHistory = data.history;
-    thinking.innerHTML = `<strong>Jarvis:</strong> ${marked.parse(data.reply)}`;
-}
-
-document.getElementById("studyInput").addEventListener("keydown", function(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendAnswer();
+    function appendStudyMessage(sender, text) {
+        const box = document.getElementById("studyBox");
+        const div = document.createElement("div");
+        div.classList.add("message", sender === "You" ? "user-message" : "ai-message");
+        const formattedText = sender === "Jarvis" ? marked.parse(text) : text;
+        div.innerHTML = `<strong>${sender}:</strong> ${formattedText}`;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+        return div;
     }
-});
+
+    async function startSession(topic) {
+        currentTopic = topic;
+        studyHistory = [];
+
+        document.getElementById("topic-select").style.display = "none";
+        document.getElementById("study-chat").style.display = "flex";
+        document.getElementById("session-title").textContent = "Studying: " + topic;
+        document.getElementById("studyBox").innerHTML = "";
+
+        const thinking = appendStudyMessage("Jarvis", "Thinking...");
+
+        const response = await fetch("/api/study", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-API-Key": JARVIS_KEY
+            },
+            body: JSON.stringify({ message: "Start teaching me " + topic, topic: topic, history: studyHistory })
+        });
+
+        const data = await response.json();
+        studyHistory = data.history;
+        thinking.innerHTML = `<strong>Jarvis:</strong> ${marked.parse(data.reply)}`;
+    }
+
+    async function sendAnswer() {
+        const input = document.getElementById("studyInput");
+        const message = input.value.trim();
+        if (!message) return;
+
+        appendStudyMessage("You", message);
+        input.value = "";
+
+        const thinking = appendStudyMessage("Jarvis", "Thinking...");
+
+        const response = await fetch("/api/study", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-API-Key": JARVIS_KEY
+            },
+            body: JSON.stringify({ message: message, topic: currentTopic, history: studyHistory })
+        });
+
+        const data = await response.json();
+        studyHistory = data.history;
+        thinking.innerHTML = `<strong>Jarvis:</strong> ${marked.parse(data.reply)}`;
+    }
+
+    document.getElementById("studyInput").addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendAnswer();
+        }
+    });
 </script>
 </body>
 </html>

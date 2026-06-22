@@ -1,12 +1,24 @@
 from flask import Flask, render_template, request, jsonify
 from src.memory import DatabaseManager
 import ollama
-
+from config import DB_PATH, JARVIS_SECRET
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 app = Flask(__name__)
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["30 per minute"]
+)
 db = DatabaseManager()
 db.create_tables()
 db.create_chat_history_table()
-
+@app.before_request
+def check_api_key():
+    if request.path.startswith("/api/"):
+        key = request.headers.get("X-API-Key")
+        if key != JARVIS_SECRET:
+            return jsonify({"error": "unauthorized"}), 401
 system_prompt = """
 You are Jarvis, Mohammed's personal AI mentor and code teacher.
 
@@ -26,10 +38,10 @@ When Mohammed asks what to study:
 
 Be concise and direct. No fluff.
 """
-
+@limiter.limit("30 per minute")
 @app.route("/study")
 def study_page():
-    return render_template("study.html")
+    return render_template("study.html",api_key=JARVIS_SECRET)
 
 @app.route("/")
 def home():
@@ -40,8 +52,9 @@ def home():
 @app.route("/chat")
 def chat_page():
     history = db.get_chat_history()
-    return render_template("chat.html", history=history)
+    return render_template("chat.html", history=history,api_key=JARVIS_SECRET)
 
+@limiter.limit("30 per minute")
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json()

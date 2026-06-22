@@ -59,7 +59,9 @@
         </div>
     </div>
 </div>
+
 <script>
+    const JARVIS_KEY = "{{ api_key }}";
     let history = [];
     let codeMode = false;
     let pendingFile = null;
@@ -100,7 +102,10 @@
 
         const response = await fetch("/api/chat", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "X-API-Key": JARVIS_KEY
+            },
             body: JSON.stringify({ message: finalMessage, history: history })
         });
 
@@ -133,7 +138,10 @@
         try {
             const response = await fetch("/api/chat", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-API-Key": JARVIS_KEY
+                },
                 body: JSON.stringify({ message: finalMessage, history: history }),
                 signal: currentController.signal
             });
@@ -176,12 +184,12 @@
         return div;
     }
 
-   document.getElementById("userInput").addEventListener("keydown", function(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-    }
-});
+    document.getElementById("userInput").addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
 
     async function handleFileUpload(event) {
         const file = event.target.files[0];
