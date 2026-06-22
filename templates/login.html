@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jarvis — Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div style="display:flex; align-items:center; justify-content:center; min-height:100vh;">
+    <div style="background:var(--bg-panel); border:1px solid var(--border); border-radius:10px; padding:40px; width:320px;">
+        
+        <h2 id="logo" style="margin-bottom:8px;">JARVIS</h2>
+        <p style="color:var(--text-dim); font-size:13px; margin-bottom:28px;">local AI companion</p>
+
+        {% if error %}
+        <p style="color:#d97777; font-size:13px; margin-bottom:16px;">{{ error }}</p>
+        {% endif %}
+
+        <form method="POST">
+            <div style="margin-bottom:16px;">
+                <label style="display:block; color:var(--text-dim); font-size:12px; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Username</label>
+                <input type="text" name="username" autofocus
+                    style="width:100%; background:var(--bg-raised); border:1px solid var(--border); color:var(--text-bright); padding:10px 12px; border-radius:6px; font-family:inherit; font-size:14px;">
+            </div>
+
+            <div style="margin-bottom:24px;">
+                <label style="display:block; color:var(--text-dim); font-size:12px; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Password</label>
+                <input type="password" name="password"
+                    style="width:100%; background:var(--bg-raised); border:1px solid var(--border); color:var(--text-bright); padding:10px 12px; border-radius:6px; font-family:inherit; font-size:14px;">
+            </div>
+
+            <button type="submit"
+                style="width:100%; background:var(--accent); color:var(--bg); border:none; padding:12px; border-radius:6px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;">
+                Login
+            </button>
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>
