@@ -29,10 +29,15 @@
         <div id="study-chat" style="display:none;">
             <h2 id="session-title"></h2>
             <div class="chat-box" id="studyBox"></div>
-            <div class="chat-input-area">
-                <textarea id="studyInput" placeholder="Type your answer..."></textarea>
-                <button onclick="sendAnswer()">Send</button>
-            </div>
+           <div class="chat-input-area">
+    <textarea id="studyInput" placeholder="Type your answer..."></textarea>
+    <button onclick="sendAnswer()">Send</button>
+</div>
+
+<div class="status-bar">
+    <span><span class="hint">enter</span> send · <span class="hint">shift+enter</span> new line</span>
+    <span>qwen2.5:1.5b</span>
+</div>
         </div>
     </div>
 </div>
@@ -94,6 +99,13 @@ async function sendAnswer() {
     studyHistory = data.history;
     thinking.innerHTML = `<strong>Jarvis:</strong> ${marked.parse(data.reply)}`;
 }
+
+document.getElementById("studyInput").addEventListener("keydown", function(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendAnswer();
+    }
+});
 </script>
 </body>
 </html>
