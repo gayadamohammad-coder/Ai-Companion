@@ -3,7 +3,16 @@ from config import DB_PATH, JARVIS_SECRET, JARVIS_USERNAME, JARVIS_PASSWORD, FLA
 from src.memory import DatabaseManager
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-import ollama
+import os
+
+try:
+    import ollama
+    OLLAMA_AVAILABLE = True
+except ImportError:
+    OLLAMA_AVAILABLE = False
+
+from groq import Groq
+groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY
@@ -112,11 +121,19 @@ Mohammed's goals:
     db.save_message("user", user_message)
 
     try:
-        response = ollama.chat(
-            model="qwen2.5:1.5b",
-            messages=[{"role": "system", "content": dynamic_prompt}] + history
-        )
-        ai_text = response["message"]["content"]
+        if OLLAMA_AVAILABLE:
+            response = ollama.chat(
+                model="qwen2.5:1.5b",
+                messages=[{"role": "system", "content": dynamic_prompt}] + history
+            )
+            ai_text = response["message"]["content"]
+        else:
+            response = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "system", "content": dynamic_prompt}] + history
+            )
+            ai_text = response.choices[0].message.content
+
         history.append({"role": "assistant", "content": ai_text})
         db.save_message("assistant", ai_text)
         return jsonify({"reply": ai_text, "history": history})
@@ -171,11 +188,19 @@ Mohammed's relevant memories:
     history.append({"role": "user", "content": user_message})
 
     try:
-        response = ollama.chat(
-            model="qwen2.5:1.5b",
-            messages=[{"role": "system", "content": study_prompt}] + history
-        )
-        ai_text = response["message"]["content"]
+        if OLLAMA_AVAILABLE:
+            response = ollama.chat(
+                model="qwen2.5:1.5b",
+                messages=[{"role": "system", "content": study_prompt}] + history
+            )
+            ai_text = response["message"]["content"]
+        else:
+            response = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "system", "content": study_prompt}] + history
+            )
+            ai_text = response.choices[0].message.content
+
         history.append({"role": "assistant", "content": ai_text})
 
         total_questions += 1
@@ -190,7 +215,9 @@ Mohammed's relevant memories:
             "quiz_score": quiz_score,
             "total_questions": total_questions
         })
+
     except Exception as e:
         return jsonify({"reply": f"Error: {e}"}), 500
+
 if __name__ == "__main__":
     app.run(debug=True)
