@@ -132,13 +132,54 @@ class DatabaseManager:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS learning_topics (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            topic TEXT NOT NULL,
-            status TEXT NOT NULL,
-            date_added TEXT NOT NULL
-             )
-        """)
+                CREATE TABLE IF NOT EXISTS learning_topics (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                topic TEXT NOT NULL,
+                status TEXT NOT NULL,
+                date_added TEXT NOT NULL,
+                 current_concept TEXT,
+             quiz_score INTEGER DEFAULT 0,
+             total_questions INTEGER DEFAULT 0,
+             last_updated TEXT
+                 )
+            """)
         conn.commit()
         conn.close()
+
+
     
+    def save_progress(self, topic, current_concept, quiz_score, total_questions):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        from datetime import datetime
+        now = datetime.now().isoformat()
+        cursor.execute("""
+                INSERT INTO learning_topics (topic, status, date_added, current_concept, quiz_score, total_questions, last_updated)
+                 VALUES (?, 'in_progress', ?, ?, ?, ?, ?)
+                ON CONFLICT(topic) DO UPDATE SET
+            current_concept = excluded.current_concept,
+            quiz_score = excluded.quiz_score,
+            total_questions = excluded.total_questions,
+            status = 'in_progress',
+            last_updated = excluded.last_updated
+    """, (topic, now, current_concept, quiz_score, total_questions, now))
+    conn.commit()
+    conn.close()
+
+def get_progress(self, topic):
+    conn = sqlite3.connect(self.db_path)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT current_concept, quiz_score, total_questions, last_updated
+        FROM learning_topics WHERE topic = ?
+    """, (topic,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return {
+            'current_concept': row[0],
+            'quiz_score': row[1],
+            'total_questions': row[2],
+            'last_updated': row[3]
+        }
+    return None

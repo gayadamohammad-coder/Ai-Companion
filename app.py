@@ -131,9 +131,16 @@ def study():
     user_message = data.get("message", "")
     topic = data.get("topic", "")
     history = data.get("history", [])
+    quiz_score = data.get("quiz_score", 0)
+    total_questions = data.get("total_questions", 0)
 
     memories = db.search_memories(user_message)
     memory_text = "\n".join([f"- {m[0]}" for m in memories])
+
+    progress = db.get_progress(topic)
+    progress_text = ""
+    if progress and progress['current_concept']:
+        progress_text = f"\nMohammed previously studied up to: {progress['current_concept']}. Quiz score so far: {progress['quiz_score']}/{progress['total_questions']}. Continue from where he left off."
 
     study_prompt = f"""You are Jarvis, a strict but encouraging coding teacher.
 
@@ -155,8 +162,7 @@ Mohammed's project context:
 - SQLite database with memories, goals, chat_history tables
 - chat.html with JavaScript fetch calls to /api/chat
 - Dark terminal-style UI
-
-Start by introducing the first concept for {topic}. Do not ask what they want to learn — just start teaching.
+{progress_text}
 
 Mohammed's relevant memories:
 {memory_text}
@@ -171,9 +177,20 @@ Mohammed's relevant memories:
         )
         ai_text = response["message"]["content"]
         history.append({"role": "assistant", "content": ai_text})
-        return jsonify({"reply": ai_text, "history": history})
+
+        total_questions += 1
+        if "correct" in ai_text.lower():
+            quiz_score += 1
+
+        db.save_progress(topic, ai_text[:100], quiz_score, total_questions)
+
+        return jsonify({
+            "reply": ai_text,
+            "history": history,
+            "quiz_score": quiz_score,
+            "total_questions": total_questions
+        })
     except Exception as e:
         return jsonify({"reply": f"Error: {e}"}), 500
-
 if __name__ == "__main__":
     app.run(debug=True)
