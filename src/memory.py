@@ -152,17 +152,7 @@ class DatabaseManager:
         conn.close()
 
 
-    NTFY_TOPIC = "jarvis-mohammed-7x9k"
-
-    def send_notification(title, message):
-        req.post(f"https://ntfy.sh/{NTFY_TOPIC}", data=message, headers={"Title": title, "Priority": "default"})
-
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(lambda: send_notification("🌅 Morning", "Good morning Mohammed! Time to give thanks to God. Alhamdulillah for a new day."), "cron", hour=6, minute=0)
-    scheduler.add_job(lambda: send_notification("🕌 Prayer", "Time to pray Mohammed. Don't delay it."), "cron", hour=9, minute=0)
-    scheduler.add_job(lambda: send_notification("💧 Water & Food", "Mohammed, drink water and eat something. Your body needs fuel."), "cron", hour=16, minute=0)
-    scheduler.add_job(lambda: send_notification("🌙 Mindfulness", "End your day with gratitude. Take a moment to thank God for everything today."), "cron", hour=22, minute=0)
-    scheduler.start()
+   
     def save_progress(self, topic, current_concept, quiz_score, total_questions):
         from datetime import datetime
         conn = sqlite3.connect(self.db_path)
