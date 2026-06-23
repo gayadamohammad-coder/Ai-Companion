@@ -26,6 +26,7 @@ limiter = Limiter(
 db = DatabaseManager()
 db.create_tables()
 db.create_chat_history_table()
+db.create_learning_table()
 
 system_prompt = """
 You are Jarvis, Mohammed's personal AI mentor and code teacher.
