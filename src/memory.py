@@ -1,11 +1,16 @@
 import sqlite3
 from config import DB_PATH
-from sentence_transformers import SentenceTransformer
-from sentence_transformers.util import cos_sim
+try:
+    from sentence_transformers import SentenceTransformer
+    from sentence_transformers.util import cos_sim
+    EMBEDDINGS_AVAILABLE = True
+except ImportError:
+    EMBEDDINGS_AVAILABLE = False
 import json
 
 class DatabaseManager:
-    embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+    embedding_model = SentenceTransformer('all-MiniLM-L6-v2') if EMBEDDINGS_AVAILABLE else None
+
     def __init__(self, db_path=DB_PATH):
         self.db_path = db_path
 
@@ -27,27 +32,31 @@ class DatabaseManager:
         """)
         conn.commit()
         conn.close()
-    
-    def search_memories(self,query,top_n=3):
-        memories = self.get_memories()
-        query_embedding=self.embedding_model.encode(query)
 
+    def search_memories(self, query, top_n=3):
+        if not EMBEDDINGS_AVAILABLE or self.embedding_model is None:
+            return [(m[0], 0) for m in self.get_memories()]
+        memories = self.get_memories()
+        query_embedding = self.embedding_model.encode(query)
         results = []
         for memory_text, embedding_json in memories:
             stored_embedding = json.loads(embedding_json)
-            similarity = cos_sim(query_embedding,stored_embedding)
-            results.append((memory_text,similarity))
-        results.sort(key=lambda x: x[1],reverse=True)
+            similarity = cos_sim(query_embedding, stored_embedding)
+            results.append((memory_text, similarity))
+        results.sort(key=lambda x: x[1], reverse=True)
         return results[:top_n]
 
     def save_memory(self, memory_text):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        embedding=self.embedding_model.encode(memory_text)
-        embedding_json=json.dumps(embedding.tolist())
+        if EMBEDDINGS_AVAILABLE and self.embedding_model:
+            embedding = self.embedding_model.encode(memory_text)
+            embedding_json = json.dumps(embedding.tolist())
+        else:
+            embedding_json = json.dumps([])
         cursor.execute(
-            "INSERT INTO memories (memory_text,embedding) VALUES (?,?)",
-            (memory_text,embedding_json,)
+            "INSERT INTO memories (memory_text, embedding) VALUES (?, ?)",
+            (memory_text, embedding_json,)
         )
         conn.commit()
         conn.close()
@@ -55,7 +64,7 @@ class DatabaseManager:
     def get_memories(self):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT memory_text,embedding FROM memories")
+        cursor.execute("SELECT memory_text, embedding FROM memories")
         memories = cursor.fetchall()
         conn.close()
         return memories
@@ -87,23 +96,20 @@ class DatabaseManager:
         goals = cursor.fetchall()
         conn.close()
         return goals
-    
 
     def create_chat_history_table(self):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS chat_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            role TEXT NOT NULL,
-            content TEXT NOT NULL,
-            timestamp TEXT NOT NULL
-        )
-             """)
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                role TEXT NOT NULL,
+                content TEXT NOT NULL,
+                timestamp TEXT NOT NULL
+            )
+        """)
         conn.commit()
         conn.close()
-
-    
 
     def save_message(self, role, content):
         from datetime import datetime
@@ -117,69 +123,66 @@ class DatabaseManager:
         conn.close()
 
     def get_chat_history(self):
-        conn=sqlite3.connect(self.db_path)
-        cursor=conn.cursor()
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
         cursor.execute("""
-                    SELECT role,content FROM chat_history
-                    ORDER BY id ASC
-                       """)
+            SELECT role, content FROM chat_history
+            ORDER BY id ASC
+        """)
         chat_history = cursor.fetchall()
         conn.close()
         return chat_history
-    
 
     def create_learning_table(self):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("""
-                CREATE TABLE IF NOT EXISTS learning_topics (
+            CREATE TABLE IF NOT EXISTS learning_topics (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 topic TEXT NOT NULL,
                 status TEXT NOT NULL,
                 date_added TEXT NOT NULL,
-                 current_concept TEXT,
-             quiz_score INTEGER DEFAULT 0,
-             total_questions INTEGER DEFAULT 0,
-             last_updated TEXT
-                 )
-            """)
+                current_concept TEXT,
+                quiz_score INTEGER DEFAULT 0,
+                total_questions INTEGER DEFAULT 0,
+                last_updated TEXT
+            )
+        """)
         conn.commit()
         conn.close()
 
-
-    
     def save_progress(self, topic, current_concept, quiz_score, total_questions):
+        from datetime import datetime
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        from datetime import datetime
         now = datetime.now().isoformat()
         cursor.execute("""
-                INSERT INTO learning_topics (topic, status, date_added, current_concept, quiz_score, total_questions, last_updated)
-                 VALUES (?, 'in_progress', ?, ?, ?, ?, ?)
-                ON CONFLICT(topic) DO UPDATE SET
-            current_concept = excluded.current_concept,
-            quiz_score = excluded.quiz_score,
-            total_questions = excluded.total_questions,
-            status = 'in_progress',
-            last_updated = excluded.last_updated
-    """, (topic, now, current_concept, quiz_score, total_questions, now))
-    conn.commit()
-    conn.close()
+            INSERT INTO learning_topics (topic, status, date_added, current_concept, quiz_score, total_questions, last_updated)
+            VALUES (?, 'in_progress', ?, ?, ?, ?, ?)
+            ON CONFLICT(topic) DO UPDATE SET
+                current_concept = excluded.current_concept,
+                quiz_score = excluded.quiz_score,
+                total_questions = excluded.total_questions,
+                status = 'in_progress',
+                last_updated = excluded.last_updated
+        """, (topic, now, current_concept, quiz_score, total_questions, now))
+        conn.commit()
+        conn.close()
 
-def get_progress(self, topic):
-    conn = sqlite3.connect(self.db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT current_concept, quiz_score, total_questions, last_updated
-        FROM learning_topics WHERE topic = ?
-    """, (topic,))
-    row = cursor.fetchone()
-    conn.close()
-    if row:
-        return {
-            'current_concept': row[0],
-            'quiz_score': row[1],
-            'total_questions': row[2],
-            'last_updated': row[3]
-        }
-    return None
+    def get_progress(self, topic):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT current_concept, quiz_score, total_questions, last_updated
+            FROM learning_topics WHERE topic = ?
+        """, (topic,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            return {
+                'current_concept': row[0],
+                'quiz_score': row[1],
+                'total_questions': row[2],
+                'last_updated': row[3]
+            }
+        return None
