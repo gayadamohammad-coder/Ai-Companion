@@ -188,3 +188,37 @@ class DatabaseManager:
                 'last_updated': row[3]
             }
         return None
+    
+
+    def create_reminders_table(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+             CREATE TABLE IF NOT EXISTS reminders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            message TEXT NOT NULL,
+            time TEXT NOT NULL,
+            days TEXT DEFAULT 'daily',
+            active INTEGER DEFAULT 1
+            )
+             """)
+        conn.commit()
+        conn.close()
+
+    def save_reminder(self, message, time, days='daily'):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO reminders (message, time, days) VALUES (?, ?, ?)",
+            (message, time, days)
+            )
+        conn.commit()
+        conn.close()
+
+    def get_reminders(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, message, time, days FROM reminders WHERE active = 1")
+        reminders = cursor.fetchall()
+        conn.close()
+        return reminders

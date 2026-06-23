@@ -6,6 +6,7 @@ from flask_limiter.util import get_remote_address
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
 import requests as req
+
 try:
     import ollama
     OLLAMA_AVAILABLE = True
@@ -28,16 +29,27 @@ db = DatabaseManager()
 db.create_tables()
 db.create_chat_history_table()
 db.create_learning_table()
+db.create_reminders_table()
+
 NTFY_TOPIC = "jarvis-mohammed-7x9k"
 
 def send_notification(title, message):
     req.post(f"https://ntfy.sh/{NTFY_TOPIC}", data=message, headers={"Title": title, "Priority": "default"})
+
+def check_reminders():
+    from datetime import datetime
+    now = datetime.now().strftime("%H:%M")
+    reminders = db.get_reminders()
+    for reminder_id, message, time, days in reminders:
+        if time == now:
+            send_notification("⏰ Jarvis Reminder", message)
 
 scheduler = BackgroundScheduler()
 scheduler.add_job(lambda: send_notification("🌅 Morning", "Good morning Mohammed! Time to give thanks to God. Alhamdulillah for a new day."), "cron", hour=6, minute=0)
 scheduler.add_job(lambda: send_notification("🕌 Prayer", "Time to pray Mohammed. Don't delay it."), "cron", hour=9, minute=0)
 scheduler.add_job(lambda: send_notification("💧 Water & Food", "Mohammed, drink water and eat something. Your body needs fuel."), "cron", hour=16, minute=0)
 scheduler.add_job(lambda: send_notification("🌙 Mindfulness", "End your day with gratitude. Take a moment to thank God for everything today."), "cron", hour=22, minute=0)
+scheduler.add_job(check_reminders, "interval", minutes=1)
 scheduler.start()
 
 system_prompt = """
@@ -58,6 +70,12 @@ When Mohammed asks what to study:
 - Keep it practical, not theoretical
 
 Be concise and direct. No fluff.
+
+When Mohammed says something like "remind me to [do something] at [time]":
+- Extract the message and time
+- Respond with: REMINDER:[message]|[HH:MM]
+- Example: if Mohammed says "remind me to drink water at 14:30", respond with: REMINDER:Drink water|14:30
+- Then confirm to Mohammed that the reminder is set
 """
 
 @app.before_request
@@ -146,6 +164,16 @@ Mohammed's goals:
                 messages=[{"role": "system", "content": dynamic_prompt}] + history
             )
             ai_text = response.choices[0].message.content
+
+        if ai_text.startswith("REMINDER:"):
+            try:
+                parts = ai_text.split("REMINDER:")[1].split("|")
+                reminder_message = parts[0].strip()
+                reminder_time = parts[1].strip()[:5]
+                db.save_reminder(reminder_message, reminder_time)
+                ai_text = f"✅ Reminder set! I'll notify you to '{reminder_message}' at {reminder_time} every day."
+            except:
+                ai_text = "I understood you want a reminder but couldn't parse the time. Try: 'remind me to pray at 09:00'"
 
         history.append({"role": "assistant", "content": ai_text})
         db.save_message("assistant", ai_text)
