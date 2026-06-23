@@ -4,7 +4,8 @@ from src.memory import DatabaseManager
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import os
-
+from apscheduler.schedulers.background import BackgroundScheduler
+import requests as req
 try:
     import ollama
     OLLAMA_AVAILABLE = True
