@@ -51,6 +51,7 @@
 
     <button id="codeModeBtn" onclick="toggleCodeMode()">&lt;/&gt;</button>
     <button onclick="sendMessage()">Send</button>
+<button id="micBtn" onclick="startVoice()">🎤</button>
     <button id="stopBtn" onclick="stopJarvis()" style="display:none;">Stop</button>
     <input type="file" id="fileInput" accept=".py,.html,.css,.js" style="display:none;" onchange="handleFileUpload(event)">
     <button onclick="document.getElementById('fileInput').click()">📁</button>
@@ -207,7 +208,25 @@
         input.placeholder = `📁 ${file.name} attached — type your question...`;
         input.focus();
     }
+    function startVoice() {
+    const recognition = new webkitSpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.onstart = () => {
+        document.getElementById('micBtn').textContent = '🔴';
+    };
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('userInput').value = transcript;
+        document.getElementById('micBtn').textContent = '🎤';
+        sendMessage();
+    };
+    recognition.onerror = () => {
+        document.getElementById('micBtn').textContent = '🎤';
+    };
+    recognition.start();
+}
 </script>
+
 <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/static/sw.js');
