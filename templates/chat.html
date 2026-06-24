@@ -2,7 +2,7 @@
 <html>
 <head>
     <link rel="manifest" href="/static/manifest.json">
-<meta name="theme-color" content="#7c3aed">
+    <meta name="theme-color" content="#7c3aed">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Companion - Chat</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -51,7 +51,7 @@
 
     <button id="codeModeBtn" onclick="toggleCodeMode()">&lt;/&gt;</button>
     <button onclick="sendMessage()">Send</button>
-<button id="micBtn" onclick="startVoice()">🎤</button>
+    <button id="micBtn" onclick="toggleVoice()">🎤</button>
     <button id="stopBtn" onclick="stopJarvis()" style="display:none;">Stop</button>
     <input type="file" id="fileInput" accept=".py,.html,.css,.js" style="display:none;" onchange="handleFileUpload(event)">
     <button onclick="document.getElementById('fileInput').click()">📁</button>
@@ -73,6 +73,52 @@
     let pendingFile = null;
     let editor = null;
     let currentController = null;
+    let voiceMode = false;
+    let recognition = null;
+
+    function speakText(text) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.onend = () => {
+            if (voiceMode) {
+                startListening();
+            }
+        };
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function toggleVoice() {
+        if (voiceMode) {
+            voiceMode = false;
+            if (recognition) recognition.stop();
+            window.speechSynthesis.cancel();
+            document.getElementById('micBtn').textContent = '🎤';
+        } else {
+            voiceMode = true;
+            document.getElementById('micBtn').textContent = '🔴 Stop';
+            startListening();
+        }
+    }
+
+    function startListening() {
+        if (!voiceMode) return;
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.onresult = async (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('userInput').value = transcript;
+            await sendMessage(true);
+        };
+        recognition.onerror = () => {
+            if (voiceMode) startListening();
+        };
+        recognition.onend = () => {};
+        recognition.start();
+    }
 
     function toggleCodeMode() {
         const overlay = document.getElementById("codeModalOverlay");
@@ -118,9 +164,10 @@
         const data = await response.json();
         history = data.history;
         thinking.innerHTML = `<strong>Jarvis:</strong> ${data.reply}`;
+        speakText(data.reply);
     }
 
-    async function sendMessage() {
+    async function sendMessage(fromVoice = false) {
         const input = document.getElementById("userInput");
         const message = input.value.trim();
 
@@ -155,6 +202,7 @@
             const data = await response.json();
             history = data.history;
             thinking.innerHTML = `<strong>Jarvis:</strong> ${data.reply}`;
+            speakText(data.reply);
         } catch (err) {
             if (err.name === "AbortError") {
                 thinking.innerHTML = `<strong>Jarvis:</strong> (cancelled)`;
@@ -208,23 +256,6 @@
         input.placeholder = `📁 ${file.name} attached — type your question...`;
         input.focus();
     }
-    function startVoice() {
-    const recognition = new webkitSpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.onstart = () => {
-        document.getElementById('micBtn').textContent = '🔴';
-    };
-    recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        document.getElementById('userInput').value = transcript;
-        document.getElementById('micBtn').textContent = '🎤';
-        sendMessage();
-    };
-    recognition.onerror = () => {
-        document.getElementById('micBtn').textContent = '🎤';
-    };
-    recognition.start();
-}
 </script>
 
 <script>
