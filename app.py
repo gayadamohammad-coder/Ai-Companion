@@ -166,7 +166,7 @@ Mohammed's goals:
             ai_text = response.choices[0].message.content
 
         import re
-        reminder_matches = re.findall(r'REMIN[DE]R:([^|]+)\|(\d{2}:\d{2})', ai_text)
+        reminder_matches = re.findall(r'REMIND?ER:([^|]+?)\|(\d{2}:\d{2})', ai_text)
         if reminder_matches:
             saved = []
             for reminder_message, reminder_time in reminder_matches:
