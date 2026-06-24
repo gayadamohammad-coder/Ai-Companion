@@ -165,15 +165,15 @@ Mohammed's goals:
             )
             ai_text = response.choices[0].message.content
 
-        if ai_text.startswith("REMINDER:"):
-            try:
-                parts = ai_text.split("REMINDER:")[1].split("|")
-                reminder_message = parts[0].strip()
-                reminder_time = parts[1].strip()[:5]
+        import re
+        reminder_matches = re.findall(r'REMIN[DE]R:([^|]+)\|(\d{2}:\d{2})', ai_text)
+        if reminder_matches:
+            saved = []
+            for reminder_message, reminder_time in reminder_matches:
+                reminder_message = reminder_message.strip()
                 db.save_reminder(reminder_message, reminder_time)
-                ai_text = f"✅ Reminder set! I'll notify you to '{reminder_message}' at {reminder_time} every day."
-            except:
-                ai_text = "I understood you want a reminder but couldn't parse the time. Try: 'remind me to pray at 09:00'"
+                saved.append(f"'{reminder_message}' at {reminder_time}")
+            ai_text = "✅ Reminders set!\n" + "\n".join([f"• {s}" for s in saved])
 
         history.append({"role": "assistant", "content": ai_text})
         db.save_message("assistant", ai_text)
